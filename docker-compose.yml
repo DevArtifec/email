@@ -1,0 +1,33 @@
+# drogist-mail — standalone mail server (docker-mailserver)
+# Live on Hostinger VPS 145.14.157.73, config root /opt/drogist-mail.
+# Shares the host's `root_default` docker network with n8n/traefik — do NOT
+# restart the whole stack for a mail change.
+services:
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:14.0.0
+    container_name: drogist-mail
+    hostname: mail.bedenwellnessflevoland.nl
+    env_file: mailserver.env
+    ports:
+      - '25:25'    # SMTP (inbound + relay)
+      - '465:465'  # SMTPS submission
+      - '587:587'  # STARTTLS submission — what n8n/apps use
+      - '993:993'  # IMAPS
+    volumes:
+      - /opt/drogist-mail/mail-data:/var/mail
+      - /opt/drogist-mail/mail-state:/var/mail-state
+      - /opt/drogist-mail/mail-logs:/var/log/mail
+      - /opt/drogist-mail/config:/tmp/docker-mailserver
+    restart: always
+    stop_grace_period: 1m
+    networks:
+      - root_default
+    # NOTE: ss must run with --numeric — the service name renders as ":smtp"
+    # otherwise and the old probe reported a healthy container as unhealthy.
+    healthcheck:
+      test: 'ss --listening --tcp --numeric | grep ":25 " || exit 1'
+      timeout: 3s
+      retries: 0
+networks:
+  root_default:
+    external: true

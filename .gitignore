@@ -1,0 +1,12 @@
+# never commit live secrets or mailbox data
+mailserver.env
+*.env
+!mailserver.env.example
+mail-data/
+mail-state/
+mail-logs/
+config/opendkim/keys/
+config/*.cf.local
+*.pem
+*.key
+backup/
